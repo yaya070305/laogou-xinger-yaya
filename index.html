@@ -5,6 +5,7 @@
 <head>
 
     <meta charset="UTF-8">
+    <link rel="manifest" href="manifest.json">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -916,6 +917,10 @@
 
 <body>
 
+<div id="notifyPrompt" style="display:none;background:#fff3cd;color:#856404;padding:10px 16px;text-align:center;font-size:14px;cursor:pointer;border-bottom:2px solid #ffc107;position:relative;z-index:1000;">
+    🔔 点这里开启消息通知，后台也能收到提醒！<span style="text-decoration:underline;margin-left:4px;">立即开启</span>
+</div>
+
 <div class="app">
 
     <div class="sidebar" id="sidebar">
@@ -1820,9 +1825,34 @@
         } catch(e) {}
     }
 
+    function setupNotificationPrompt() {
+        let prompt = document.getElementById('notifyPrompt');
+        if (!prompt) return;
+        if (Notification.permission !== 'default') {
+            prompt.style.display = 'none';
+            return;
+        }
+        // 显示通知开启横幅
+        prompt.style.display = 'block';
+        prompt.onclick = function() {
+            Notification.requestPermission().then(function(perm) {
+                if (perm === 'granted') {
+                    prompt.style.display = 'none';
+                    showToast('✅ 通知已开启！后台也能收到提醒了~');
+                } else if (perm === 'denied') {
+                    prompt.style.display = 'none';
+                    showToast('⚠️ 通知被拒绝，请在浏览器设置中手动开启');
+                } else {
+                    showToast('请点"允许"才能开启通知哦');
+                }
+            });
+        };
+    }
+
     function notifyNewMessage(sender, text, img, isSensitive) {
-        // 播放提示音
+        // 播放提示音 + 手机震动（华为通知弹不出？震动一定行！）
         playMessageSound();
+        try { navigator.vibrate([200, 100, 200]); } catch(e) {}
 
         // 页面内微信风格横幅
         let banner = document.getElementById('msgNotifyBanner');
@@ -1854,17 +1884,20 @@
         banner.classList.add('show');
         banner._timer = setTimeout(() => banner.classList.remove('show'), 4000);
 
-        // 浏览器通知（仅在页面隐藏时或用户已授权时）
+        // 系统通知（华为需要 vibrate + 非silent 才能弹窗）
         if (Notification.permission === 'granted') {
             let body = isSensitive ? '你收到了一条消息🍎' : (text || (img ? '[图片]' : ''));
             if (body.length > 100) body = body.slice(0, 97) + '...';
-            let n = new Notification(sender + ' 发来消息', {
-                body: body,
-                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">💌</text></svg>',
-                silent: true
-            });
-            n.onclick = function() { window.focus(); n.close(); };
-            setTimeout(() => n.close(), 5000);
+            try {
+                let n = new Notification(sender + ' 发来消息', {
+                    body: body,
+                    icon: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">💌</text></svg>'),
+                    vibrate: [200, 100, 200],
+                    silent: false
+                });
+                n.onclick = function() { window.focus(); n.close(); };
+                setTimeout(function() { n.close(); }, 5000);
+            } catch(e) {}
         }
     }
 
@@ -3439,7 +3472,8 @@
 
         loadSavedBg();
 
-        if (Notification.permission === 'default') Notification.requestPermission();
+        // 通知权限：页面内按钮引导用户点击授权（手机浏览器需要用户手势）
+        setupNotificationPrompt();
 
         const savedGlass = localStorage.getItem('glassOpacity');
 
