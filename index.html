@@ -998,7 +998,8 @@
         <div class="setting-block">
 
             <h4>📳 后台保活（切App也能收到消息）</h4>
-            <div class="toggle-row"><input type="checkbox" id="enableKeepAliveToggle"> <label>开启后台保活</label><span style="font-size:0.6rem;color:#999;margin-left:4px;">需先安装到桌面</span></div>
+            <div class="toggle-row"><input type="checkbox" id="enableKeepAliveToggle"> <label>开启后台保活</label><span style="font-size:0.6rem;color:#999;margin-left:4px;">切后台也能收消息</span></div>
+   <div id="keepaliveStatus" style="display:none;font-size:0.65rem;color:#888;margin-top:4px;padding-left:4px;"></div>
 
         </div>
 
@@ -1828,19 +1829,31 @@
     function setupNotificationPrompt() {
         let prompt = document.getElementById('notifyPrompt');
         if (!prompt) return;
-        if (Notification.permission !== 'default') {
+        // 根据权限显示横幅
+        if (Notification.permission === 'granted') {
             prompt.style.display = 'none';
             return;
         }
-        // 显示通知开启横幅
+        // 显示通知开启横幅（default 或 denied 都显示）
         prompt.style.display = 'block';
+        if (Notification.permission === 'denied') {
+            prompt.textContent = '⚠️ 通知被拒！请去系统设置→应用→浏览器→开启通知';
+            prompt.style.background = '#fff3cd';
+            prompt.onclick = function() {
+                showToast('请在手机系统「设置」→「应用」→「浏览器」→「通知管理」中手动打开');
+            };
+            return;
+        }
+        prompt.textContent = '🔔 点这里开启消息通知';
+        prompt.style.background = '#fffde7';
         prompt.onclick = function() {
             Notification.requestPermission().then(function(perm) {
                 if (perm === 'granted') {
                     prompt.style.display = 'none';
                     showToast('✅ 通知已开启！后台也能收到提醒了~');
                 } else if (perm === 'denied') {
-                    prompt.style.display = 'none';
+                    prompt.textContent = '⚠️ 通知被拒！请去系统设置→应用→浏览器→开启通知';
+                    prompt.style.background = '#fff3cd';
                     showToast('⚠️ 通知被拒绝，请在浏览器设置中手动开启');
                 } else {
                     showToast('请点"允许"才能开启通知哦');
@@ -1901,66 +1914,119 @@
         }
     }
 
-    // ==================== 后台保活 ====================
-    let keepAliveCtx = null;
-    let keepAliveNode = null;
+    // ==================== 后台保活（音频循环，防止浏览器被系统挂起） ====================
+    let keepAliveAudio = null;
+    let keepAliveStarted = false;
+
+    // 生成一段极短的无声 WAV（内存极小，循环播放无感知）
+    function _createSilentWavBlob() {
+        var sampleRate = 8000;
+        var seconds = 0.3;
+        var numSamples = Math.floor(sampleRate * seconds);
+        var buf = new ArrayBuffer(44 + numSamples);
+        var v = new DataView(buf);
+        function ws(offset, str) { for (var i = 0; i < str.length; i++) v.setUint8(offset + i, str.charCodeAt(i)); }
+        ws(0, 'RIFF');
+        v.setUint32(4, 36 + numSamples, true);
+        ws(8, 'WAVE');
+        ws(12, 'fmt ');
+        v.setUint32(16, 16, true);
+        v.setUint16(20, 1, true);       // PCM
+        v.setUint16(22, 1, true);       // mono
+        v.setUint32(24, sampleRate, true);
+        v.setUint32(28, sampleRate, true);
+        v.setUint16(32, 1, true);
+        v.setUint16(34, 8, true);
+        ws(36, 'data');
+        v.setUint32(40, numSamples, true);
+        // data 区全部为 0（静音）
+        return new Blob([buf], { type: 'audio/wav' });
+    }
 
     function startKeepAlive() {
-        if (keepAliveCtx) return;
+        if (keepAliveAudio) return;
         try {
-            keepAliveCtx = new (window.AudioContext || window.webkitAudioContext)();
-            // 创建一个几乎听不见的白噪声，持续播放防止浏览器挂起页面
-            let bufferSize = 4096;
-            let noiseBuffer = keepAliveCtx.createBuffer(1, bufferSize, keepAliveCtx.sampleRate);
-            let data = noiseBuffer.getChannelData(0);
-            // 极低振幅的白噪声（人耳几乎听不到）
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = (Math.random() * 2 - 1) * 0.0001;
+            var url = URL.createObjectURL(_createSilentWavBlob());
+            keepAliveAudio = new Audio(url);
+            keepAliveAudio.loop = true;
+            keepAliveAudio.volume = 0.01;
+            keepAliveAudio.preload = 'auto';
+            var p = keepAliveAudio.play();
+            if (p && p.then) {
+                p.then(function() {
+                    keepAliveStarted = true;
+                    _updateKeepaliveStatus();
+                }).catch(function() {
+                    // 浏览器拦截自动播放，等用户首次交互后启动
+                    keepAliveStarted = false;
+                    _updateKeepaliveStatus();
+                    var unlock = function() {
+                        if (enableKeepAlive && keepAliveAudio && !keepAliveStarted) {
+                            keepAliveAudio.play().then(function() { keepAliveStarted = true; _updateKeepaliveStatus(); }).catch(function() {});
+                        }
+                        if (keepAliveStarted) {
+                            document.removeEventListener('touchstart', unlock);
+                            document.removeEventListener('click', unlock);
+                        }
+                    };
+                    document.addEventListener('touchstart', unlock, { once: true });
+                    document.addEventListener('click', unlock, { once: true });
+                });
+            } else {
+                keepAliveStarted = true;
+                _updateKeepaliveStatus();
             }
-            keepAliveNode = keepAliveCtx.createBufferSource();
-            keepAliveNode.buffer = noiseBuffer;
-            keepAliveNode.loop = true;
-            let gainNode = keepAliveCtx.createGain();
-            gainNode.gain.value = 0.001; // 几乎静音
-            keepAliveNode.connect(gainNode);
-            gainNode.connect(keepAliveCtx.destination);
-            keepAliveNode.start();
-            // 当系统挂起AudioContext时自动恢复（后台切回时）
-            keepAliveCtx.onstatechange = function() {
-                if (keepAliveCtx && keepAliveCtx.state === 'suspended' && enableKeepAlive) {
-                    keepAliveCtx.resume().catch(() => {});
-                }
-            };
             localStorage.setItem(NEW_PREFIX + 'enableKeepAlive', 'true');
         } catch (e) {
-            showToast('保活启动失败，请重试');
+            showToast('保活启动失败');
             enableKeepAlive = false;
         }
     }
 
     function stopKeepAlive() {
         try {
-            if (keepAliveNode) { keepAliveNode.stop(); keepAliveNode = null; }
-            if (keepAliveCtx) { keepAliveCtx.close(); keepAliveCtx = null; }
+            if (keepAliveAudio) { keepAliveAudio.pause(); keepAliveAudio = null; }
+            keepAliveStarted = false;
         } catch (e) {}
         localStorage.setItem(NEW_PREFIX + 'enableKeepAlive', 'false');
+        _updateKeepaliveStatus();
+    }
+
+    // 页面从后台切回时自动恢复播放
+    document.addEventListener('visibilitychange', function() {
+        if (enableKeepAlive && document.visibilityState === 'visible' && keepAliveAudio && keepAliveAudio.paused) {
+            keepAliveAudio.play().catch(function() {});
+            _updateKeepaliveStatus();
+        }
+    });
+
+    function _updateKeepaliveStatus() {
+        var dot = document.getElementById('keepaliveStatus');
+        if (!dot) return;
+        if (!enableKeepAlive) { dot.style.display = 'none'; return; }
+        dot.style.display = 'block';
+        if (keepAliveStarted && keepAliveAudio && !keepAliveAudio.paused) {
+            dot.innerHTML = '🟢 保活运行中 · 切后台也能收消息';
+            dot.style.color = '#4caf50';
+        } else if (!keepAliveStarted && keepAliveAudio) {
+            dot.innerHTML = '🟡 等待交互后启动…';
+            dot.style.color = '#ff9800';
+        } else {
+            dot.innerHTML = '🔴 保活未启动';
+            dot.style.color = '#f44336';
+        }
     }
 
     function initKeepAlive() {
-        let saved = localStorage.getItem(NEW_PREFIX + 'enableKeepAlive');
+        var saved = localStorage.getItem(NEW_PREFIX + 'enableKeepAlive');
         if (saved === 'true') {
             enableKeepAlive = true;
             document.getElementById('enableKeepAliveToggle').checked = true;
-            // 移动端 AudioContext 需要用户交互，监听首次点击自动启动
-            let startOnInteract = function() {
-                if (enableKeepAlive && !keepAliveCtx) startKeepAlive();
-                document.removeEventListener('click', startOnInteract);
-                document.removeEventListener('touchstart', startOnInteract);
-            };
-            document.addEventListener('click', startOnInteract);
-            document.addEventListener('touchstart', startOnInteract);
-            // 也尝试直接启动（桌面端通常可以直接）
-            setTimeout(() => { if (enableKeepAlive && !keepAliveCtx) startKeepAlive(); }, 1000);
+            _updateKeepaliveStatus();
+            // 等一秒后尝试启动，如果被拦就等用户交互
+            setTimeout(function() {
+                if (enableKeepAlive && !keepAliveAudio) startKeepAlive();
+            }, 800);
         }
     }
 
@@ -2461,11 +2527,11 @@
 
         if (activeLetterTimer) clearTimeout(activeLetterTimer);
 
-        // 1小时 ~ 336小时
+        // 1小时 ~ 168小时（7天）
 
         const minMs = 1 * 60 * 60 * 1000;
 
-        const maxMs = 336 * 60 * 60 * 1000;
+        const maxMs = 168 * 60 * 60 * 1000;
 
         const delay = Math.random() * (maxMs - minMs) + minMs;
 
@@ -3474,6 +3540,21 @@
 
         // 通知权限：页面内按钮引导用户点击授权（手机浏览器需要用户手势）
         setupNotificationPrompt();
+        // 调试：显示当前通知权限状态
+        showToast('🔔 通知权限状态：' + Notification.permission + ' (granted=已授权 denied=被拒 default=未设置)');
+
+        // 3秒后自动尝试请求通知权限（milky 同款）
+        setTimeout(function() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().then(function(perm) {
+                    if (perm === 'granted') {
+                        showToast('✅ 通知权限已自动开启！');
+                        var p = document.getElementById('notifyPrompt');
+                        if (p) p.style.display = 'none';
+                    }
+                }).catch(function() {});
+            }
+        }, 3000);
 
         const savedGlass = localStorage.getItem('glassOpacity');
 
