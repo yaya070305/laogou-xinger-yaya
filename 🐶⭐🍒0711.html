@@ -1369,14 +1369,23 @@
 
     function saveAll() {
 
+        // 消息合并：防止前后台两个 WebView 互相覆盖对方的 allMessages
         try {
-
-            localStorage.setItem(NEW_PREFIX+'msgs', JSON.stringify(allMessages));
-
+            let storedMsgs = [];
+            let raw = localStorage.getItem(NEW_PREFIX+'msgs');
+            try { storedMsgs = raw ? JSON.parse(raw) : []; } catch(e) {}
+            let idSet = new Set(storedMsgs.map(m => m.id));
+            let merged = [...storedMsgs];
+            for (let m of allMessages) {
+                if (!idSet.has(m.id)) {
+                    merged.push(m);
+                    idSet.add(m.id);
+                }
+            }
+            allMessages = merged;
+            localStorage.setItem(NEW_PREFIX+'msgs', JSON.stringify(merged));
         } catch(e) {
-
             if(allMessages.length>20){ allMessages=allMessages.slice(-20); try{localStorage.setItem(NEW_PREFIX+'msgs', JSON.stringify(allMessages));}catch(e2){} }
-
         }
 
         localStorage.setItem(NEW_PREFIX+'phrases', JSON.stringify(phrases));
@@ -1406,11 +1415,8 @@
         localStorage.setItem(NEW_PREFIX+'chatFontSize', chatFontSize);
         localStorage.setItem(LETTER_HISTORY_KEY, JSON.stringify(letterHistory));
 
-        // 外观设置：直接保存当前值（从 DOM 控件读取，保证是最新的）
-        let gSlider = document.getElementById('glassOpacitySlider');
-        if (gSlider) { let gv = gSlider.value; localStorage.setItem(NEW_PREFIX+'glassOpacity', gv); localStorage.setItem('glassOpacity', gv); }
-        let bcInput = document.getElementById('selfBubbleColor');
-        if (bcInput) { let bc = bcInput.value; localStorage.setItem(NEW_PREFIX+'selfBubbleColor', bc); localStorage.setItem('selfBubbleColor', bc); }
+        // 外观设置不在这里保存！input 事件 handler 已实时保存到 localStorage。
+        // 这里如果从 DOM 读取再保存，后台 WebView（保活服务）会用默认值覆盖用户的设置。
 
     }
 
@@ -3437,14 +3443,28 @@
         bindEvents();
 
         // 后台保活：页面恢复时自动重启（如果开启了保活）
-        // 并且重新渲染消息（防止系统通知导致 DOM 更新丢失）
+        // 同时从 localStorage 重新加载消息（后台 WebView 可能已添加新消息）
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
-                // 刷新聊天消息（修复通知导致消息被吞的 bug）
+                let { msgs } = loadNewData();
+                if (msgs.length > allMessages.length) {
+                    allMessages = msgs;
+                }
                 renderMessages();
                 if (enableKeepAlive) startKeepAlive();
             }
         });
+
+        // 每10秒从 localStorage 同步一次消息（防止后台 WebView 生成的消息漏掉）
+        setInterval(() => {
+            if (!document.hidden) {
+                let { msgs } = loadNewData();
+                if (msgs.length > allMessages.length) {
+                    allMessages = msgs;
+                    renderMessages();
+                }
+            }
+        }, 10000);
 
         if (enableActive) scheduleActiveMessage();
 
