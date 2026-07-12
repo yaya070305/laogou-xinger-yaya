@@ -1406,11 +1406,11 @@
         localStorage.setItem(NEW_PREFIX+'chatFontSize', chatFontSize);
         localStorage.setItem(LETTER_HISTORY_KEY, JSON.stringify(letterHistory));
 
-        // 外观设置同步到带前缀的 key（修复重置 bug）
-        let gv = localStorage.getItem('glassOpacity');
-        if (gv) localStorage.setItem(NEW_PREFIX+'glassOpacity', gv);
-        let bc = localStorage.getItem('selfBubbleColor');
-        if (bc) localStorage.setItem(NEW_PREFIX+'selfBubbleColor', bc);
+        // 外观设置：直接保存当前值（从 DOM 控件读取，保证是最新的）
+        let gSlider = document.getElementById('glassOpacitySlider');
+        if (gSlider) { let gv = gSlider.value; localStorage.setItem(NEW_PREFIX+'glassOpacity', gv); localStorage.setItem('glassOpacity', gv); }
+        let bcInput = document.getElementById('selfBubbleColor');
+        if (bcInput) { let bc = bcInput.value; localStorage.setItem(NEW_PREFIX+'selfBubbleColor', bc); localStorage.setItem('selfBubbleColor', bc); }
 
     }
 
@@ -3437,9 +3437,12 @@
         bindEvents();
 
         // 后台保活：页面恢复时自动重启（如果开启了保活）
+        // 并且重新渲染消息（防止系统通知导致 DOM 更新丢失）
         document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && enableKeepAlive) {
-                startKeepAlive();
+            if (!document.hidden) {
+                // 刷新聊天消息（修复通知导致消息被吞的 bug）
+                renderMessages();
+                if (enableKeepAlive) startKeepAlive();
             }
         });
 
