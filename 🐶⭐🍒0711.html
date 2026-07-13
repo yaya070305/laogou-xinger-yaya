@@ -1412,7 +1412,7 @@
 
         localStorage.setItem(NEW_PREFIX+'enableIncoming', enableIncoming);
         localStorage.setItem(NEW_PREFIX+'enableKeepAlive', enableKeepAlive);
-        localStorage.setItem(NEW_PREFIX+'chatFontSize', chatFontSize);
+        // chatFontSize 由 initFontSlider 独立管理，防止后台 WebView 覆盖用户设置
         localStorage.setItem(LETTER_HISTORY_KEY, JSON.stringify(letterHistory));
 
         // 外观设置不在这里保存！input 事件 handler 已实时保存到 localStorage。
@@ -1758,7 +1758,7 @@
 
         let n = {
 
-            id: Date.now(),
+            id: getNextMsgId(),
 
             sender,
 
@@ -2414,22 +2414,31 @@
             if (phrases.length === 0) return;
         }
 
-        // 老狗和星儿各发一封
+        // 老狗和星儿各发一封，随机决定谁先（避免总是老狗先写导致内容相同）
+        let senders = ["老狗", "大宝"];
+        // 随机打乱顺序
+        if (Math.random() > 0.5) senders.reverse();
 
-        for (let name of ["老狗", "大宝"]) {
-
-            let lines = getRandomPhrases(Math.floor(Math.random() * 6) + 5); // 5~10句
+        for (let i = 0; i < senders.length; i++) {
+            let name = senders[i];
+            let lineCount = Math.floor(Math.random() * 6) + 5; // 5~10句
+            let lines = getRandomPhrases(lineCount);
 
             if (lines.length < 3) continue;
 
             let fullText = lines.join(" ");
-
+            // 两封信之间加微小延迟避免时间戳完全相同
             let msg = addMessage(name, fullText, null, 'active', true, false);
             addToLetterHistory(name, currentUser, fullText, 'active');
 
+            // 两条消息间隔一小会儿，更像真人
+            if (i < senders.length - 1) {
+                let fakeNow = Date.now();
+                msgIdCounter += 10 + Math.floor(Math.random() * 50);
+            }
         }
 
-        showToast("💌 你收到了一封来信！");
+        showToast("💌 你收到了两封来信！");
 
         // 安排下一封
 
@@ -2515,26 +2524,41 @@
         }
 
         let repliers = ["老狗", "大宝"];
+        // 随机顺序避免总是老狗先
+        if (Math.random() > 0.5) repliers.reverse();
 
         repliers.forEach(name => {
 
             let replyText = '';
+            let historyText = '';
 
             if (phrases.length === 0 && Math.random() < 0.5) {
 
                 // 无字卡时走表情/单条随机路径
                 let m = getRandomMsg();
                 replyText = m.text ? name + ": " + m.text : (m.img ? '[图片]' : '');
+                historyText = replyText || (m.img ? name + ': [表情]' : name + ': 想你啦');
                 addMessage(name, replyText, m.img, 'reply', true, true);
 
             } else {
 
                 let lines = getRandomPhrases(Math.floor(Math.random() * 6) + 5); // 5~10句
-                replyText = name + ": " + lines.join(" ");
-                if (lines.length) addMessage(name, replyText, null, 'reply', true, true);
+                if (lines.length) {
+                    replyText = name + ": " + lines.join(" ");
+                    historyText = replyText;
+                    addMessage(name, replyText, null, 'reply', true, true);
+                } else {
+                    // 万一没抽到字卡，给一个兜底
+                    replyText = name + ": 想你啦";
+                    historyText = replyText;
+                    addMessage(name, replyText, null, 'reply', true, true);
+                }
 
             }
-            if (replyText) addToLetterHistory(name, currentUser, replyText, 'reply');
+            // 一定写入信匣
+            addToLetterHistory(name, currentUser, historyText || replyText || (name + ': 想你啦'), 'reply');
+            // 两条回信之间加随机计数器偏移
+            msgIdCounter += 5 + Math.floor(Math.random() * 30);
 
         });
 
@@ -2601,10 +2625,17 @@
         if (!p) return;
 
         let o = JSON.parse(p);
+        // 超过7天未处理的旧信直接丢弃（用户可能已经不记得发过）
+        let maxAge = 7 * 24 * 60 * 60 * 1000;
+        if (Date.now() - o.time > maxAge) {
+            localStorage.removeItem(NEW_PREFIX + 'pendingLetter');
+            if (currentLetterTimer) { clearTimeout(currentLetterTimer); currentLetterTimer = null; }
+            return;
+        }
 
         if (Date.now() - o.time >= letterDelayMax * 3600000) {
 
-            if (confirm("超时补发？")) { executeReply(); localStorage.removeItem(NEW_PREFIX + 'pendingLetter'); if (currentLetterTimer) clearTimeout(currentLetterTimer); currentLetterTimer = null; }
+            if (confirm("你有未发送的回信，超时后是否补发？")) { executeReply(); localStorage.removeItem(NEW_PREFIX + 'pendingLetter'); if (currentLetterTimer) clearTimeout(currentLetterTimer); currentLetterTimer = null; }
 
         } else {
 
@@ -2762,9 +2793,8 @@
         callActive = true;
         callStartTime = Date.now();
         stopRingtone();
-        if (!isIncoming) {
-            document.getElementById('callModal').style.display = 'flex';
-        }
+        // 无论去电还是来电，都显示通话页面（含读秒）
+        document.getElementById('callModal').style.display = 'flex';
         document.getElementById('incomingModal').style.display = 'none';
         document.getElementById('callTitle').innerText = '📞 与 ' + target + ' 通话中';
         document.getElementById('callButtons').style.display = 'none';
@@ -3100,6 +3130,11 @@
     }
 
     let chatFontSize = 16;
+    let msgIdCounter = 0; // 全局消息ID计数器，防止同一毫秒内多条消息ID冲突
+    function getNextMsgId() {
+        msgIdCounter++;
+        return Date.now() * 1000 + msgIdCounter;
+    }
     function initFontSlider() {
         let s1 = document.getElementById('fontSlider');
         let s2 = document.getElementById('fontSliderSidebar');
@@ -3517,6 +3552,14 @@
         // 启动主动写信定时器
 
         scheduleActiveLetter();
+
+        // 安全兜底：确保外观设置在 localStorage 中持久化（防止后台 WebView 干扰）
+        // 这些设置由 input 事件 handler 管理，此处仅作为初始化完成后的最终确认
+        let _gs = localStorage.getItem(NEW_PREFIX+'glassOpacity');
+        if (_gs) { localStorage.setItem('glassOpacity', _gs); localStorage.setItem(NEW_PREFIX+'glassOpacity', _gs); }
+        let _bc = localStorage.getItem(NEW_PREFIX+'selfBubbleColor');
+        if (_bc) { localStorage.setItem('selfBubbleColor', _bc); localStorage.setItem(NEW_PREFIX+'selfBubbleColor', _bc); }
+        localStorage.setItem(NEW_PREFIX+'chatFontSize', chatFontSize);
 
     }
 
