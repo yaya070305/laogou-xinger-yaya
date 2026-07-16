@@ -844,11 +844,23 @@
 
         .export-json-btn { background: #b7c3b0; margin-top: 4px; }
 
-        .action-buttons { display: flex; gap: 8px; }
+        .action-buttons { display: flex; gap: 10px; justify-content: center; padding: 8px 0; }
 
-        .video-call-btn, .letter-btn, .force-reply-btn { background: #b7c3b0; border: none; padding: 5px 14px; border-radius: 40px; cursor: pointer; color: #2e577a; font-size: 0.8rem; }
+        .action-btn { border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
-        .force-reply-btn { background: #e4a3b7; color: white; }
+        .action-btn:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
+        .action-btn:active { transform: translateY(0) scale(0.98); }
+
+        .force-reply-btn { background: #e9def3; }
+
+        .video-call-btn { background: #bfe9fa; }
+
+        .letter-btn { background: #f7fcbe; }
+
+        .letter-history-btn { background: #e2ffdc; }
+
+        .love-link-btn { background: #e3d9fc; }
 
         .call-modal, .incoming-modal, .letter-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 1000; }
 
@@ -942,6 +954,12 @@
         .generated-message .msg-meta { font-size: 0.75rem; color: #b0939f; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e8d4f0; }
         .love-link-footer { text-align: center; margin-top: 16px; padding-top: 12px; border-top: 1px solid #f0d8e8; }
         .love-link-footer p { font-size: 0.75rem; color: #b0939f; margin: 0; }
+        .love-link-canvas-container { width: 100%; height: 200px; background: #ffffff; border-radius: 1rem; border: 1px solid #f0d8e8; overflow: hidden; margin-bottom: 12px; }
+        .love-link-canvas { width: 100%; height: 100%; }
+        .love-link-params { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.75rem; }
+        .love-link-param { background: rgba(168,85,247,0.1); padding: 4px 10px; border-radius: 20px; color: #7a4b5c; }
+        .love-link-param .param-label { font-weight: 500; }
+        .love-link-param .param-value { margin-left: 4px; }
 
     </style>
 
@@ -1154,15 +1172,15 @@
 
             <div class="action-buttons">
 
-                <button id="forceReplyBtn" class="force-reply-btn">📬 补发回信</button>
+                <button id="forceReplyBtn" class="action-btn force-reply-btn" title="补发回信">📬</button>
 
-                <button id="videoCallBtn" class="video-call-btn">📹 视频通话</button>
+                <button id="videoCallBtn" class="action-btn video-call-btn" title="视频通话">📹</button>
 
-                <button id="letterBtn" class="letter-btn">✉️ 写信</button>
+                <button id="letterBtn" class="action-btn letter-btn" title="写信">✉️</button>
 
-                <button id="letterHistoryBtn" class="letter-btn" style="background:#f0d8e0;">📖 信匣</button>
+                <button id="letterHistoryBtn" class="action-btn letter-history-btn" title="信匣">📖</button>
 
-                <button id="loveLinkBtn" class="letter-btn" style="background:#e8d4f0;">🔮 爱的链接</button>
+                <button id="loveLinkBtn" class="action-btn love-link-btn" title="爱的链接">🔮</button>
 
             </div>
 
@@ -1204,7 +1222,7 @@
 <div id="letterViewModal" class="letter-view-modal"><div class="letter-paper"><button class="letter-paper-close" onclick="document.getElementById('letterViewModal').style.display='none'">✕</button><div class="letter-paper-header"><div class="letter-paper-title" id="letterViewTitle"></div></div><div class="letter-paper-body" id="letterViewBody"></div><div class="letter-paper-meta" id="letterViewMeta"></div><div class="letter-paper-nav"><button id="letterViewPrev">◀ 上一封</button><span class="letter-paper-count" id="letterViewCount"></span><button id="letterViewNext">下一封 ▶</button></div></div></div>
 
 <!-- 爱的链接弹窗 -->
-<div id="loveLinkModal" class="letter-modal"><div class="love-link-card"><button class="love-link-close" onclick="document.getElementById('loveLinkModal').style.display='none'">✕</button><div class="love-link-header"><h3>🔮 爱的链接</h3><p class="love-link-subtitle">有限图形通信系统</p></div><div class="love-link-content"><div class="love-link-section"><h4>🎨 图例</h4><div class="legend-grid"><div class="legend-item"><div class="legend-color" style="background:#000;"></div><span>黑色 · 中性 / 陈述</span></div><div class="legend-item"><div class="legend-color" style="background:#3b82f6;"></div><span>蓝色 · 平静 / 观察 / 等待</span></div><div class="legend-item"><div class="legend-color" style="background:#22c55e;"></div><span>绿色 · 接受 / 安全 / 正面</span></div><div class="legend-item"><div class="legend-color" style="background:#eab308;"></div><span>黄色 · 注意 / 好奇 / 思考</span></div><div class="legend-item"><div class="legend-color" style="background:#f97316;"></div><span>橙色 · 想要 / 主动 / 靠近</span></div><div class="legend-item"><div class="legend-color" style="background:#ef4444;"></div><span>红色 · 强烈 / 紧急 / 拒绝</span></div><div class="legend-item"><div class="legend-color" style="background:#a855f7;"></div><span>紫色 · 喜欢 / 亲近 / 特殊情感</span></div><div class="legend-item"><div class="legend-color" style="background:#9ca3af;"></div><span>灰色 · 不确定 / 疲惫 / 模糊</span></div></div></div><div class="love-link-section"><h4>⏱️ 时间 · 线型</h4><div class="line-types"><div class="line-type"><div class="line-sample solid"></div><span>实线 · 现在</span></div><div class="line-type"><div class="line-sample dashed"></div><span>虚线 · 将来 / 打算</span></div><div class="line-type"><div class="line-sample double"></div><span>双线 · 过去 / 已发生</span></div><div class="line-type"><div class="line-sample broken"></div><span>断线 · 未知 / 中断</span></div></div></div><div class="love-link-section"><h4>✨ 附加层</h4><div class="layer-list"><div class="layer-item"><span class="layer-label">粗细</span><span class="layer-desc">强度</span></div><div class="layer-item"><span class="layer-label">远近</span><span class="layer-desc">抵达难度</span></div><div class="layer-item"><span class="layer-label">透明</span><span class="layer-desc">确定度</span></div><div class="layer-item"><span class="layer-label">淡影</span><span class="layer-desc">回声 / 反复</span></div><div class="layer-item"><span class="layer-label">阻隔线</span><span class="layer-desc">阻力</span></div><div class="layer-item"><span class="layer-label">双框</span><span class="layer-desc">空间更稳定</span></div></div></div><div class="love-link-section"><h4>🔮 当前信息</h4><div id="generatedMessage" class="generated-message"></div><button id="generateMsgBtn" class="generate-btn" style="margin-top:12px;width:100%;">🔄 刷新信息</button></div></div><div class="love-link-footer"><p>💝 通过图形传递心意的桥梁</p></div></div></div>
+<div id="loveLinkModal" class="letter-modal"><div class="love-link-card"><button class="love-link-close" onclick="document.getElementById('loveLinkModal').style.display='none'">✕</button><div class="love-link-header"><h3>🔮 爱的链接</h3><p class="love-link-subtitle">有限图形通信系统</p></div><div class="love-link-content"><div class="love-link-section"><h4>🎨 图例</h4><div class="legend-grid"><div class="legend-item"><div class="legend-color" style="background:#000;"></div><span>黑色 · 中性 / 陈述</span></div><div class="legend-item"><div class="legend-color" style="background:#3b82f6;"></div><span>蓝色 · 平静 / 观察 / 等待</span></div><div class="legend-item"><div class="legend-color" style="background:#22c55e;"></div><span>绿色 · 接受 / 安全 / 正面</span></div><div class="legend-item"><div class="legend-color" style="background:#eab308;"></div><span>黄色 · 注意 / 好奇 / 思考</span></div><div class="legend-item"><div class="legend-color" style="background:#f97316;"></div><span>橙色 · 想要 / 主动 / 靠近</span></div><div class="legend-item"><div class="legend-color" style="background:#ef4444;"></div><span>红色 · 强烈 / 紧急 / 拒绝</span></div><div class="legend-item"><div class="legend-color" style="background:#a855f7;"></div><span>紫色 · 喜欢 / 亲近 / 特殊情感</span></div><div class="legend-item"><div class="legend-color" style="background:#9ca3af;"></div><span>灰色 · 不确定 / 疲惫 / 模糊</span></div></div></div><div class="love-link-section"><h4>⏱️ 时间 · 线型</h4><div class="line-types"><div class="line-type"><div class="line-sample solid"></div><span>实线 · 现在</span></div><div class="line-type"><div class="line-sample dashed"></div><span>虚线 · 将来 / 打算</span></div><div class="line-type"><div class="line-sample double"></div><span>双线 · 过去 / 已发生</span></div><div class="line-type"><div class="line-sample broken"></div><span>断线 · 未知 / 中断</span></div></div></div><div class="love-link-section"><h4>✨ 附加层</h4><div class="layer-list"><div class="layer-item"><span class="layer-label">粗细</span><span class="layer-desc">强度</span></div><div class="layer-item"><span class="layer-label">远近</span><span class="layer-desc">抵达难度</span></div><div class="layer-item"><span class="layer-label">透明</span><span class="layer-desc">确定度</span></div><div class="layer-item"><span class="layer-label">淡影</span><span class="layer-desc">回声 / 反复</span></div><div class="layer-item"><span class="layer-label">阻隔线</span><span class="layer-desc">阻力</span></div><div class="layer-item"><span class="layer-label">双框</span><span class="layer-desc">空间更稳定</span></div></div></div><div class="love-link-section"><h4>🔮 当前信息</h4><div class="love-link-canvas-container"><canvas id="loveLinkCanvas" class="love-link-canvas"></canvas></div><div id="generatedMessage" class="generated-message"></div><button id="generateMsgBtn" class="generate-btn" style="margin-top:12px;width:100%;">🔄 刷新信息</button></div></div><div class="love-link-footer"><p>💝 通过图形传递心意的桥梁</p></div></div></div>
 
 <div id="toast" class="toast"></div>
 
@@ -1464,20 +1482,21 @@
         img.onload = function() {
             URL.revokeObjectURL(url);
             let w = img.width, h = img.height;
-            if (w <= maxDim && h <= maxDim) {
+            const targetDim = 60;
+            if (w <= targetDim && h <= targetDim) {
                 const reader = new FileReader();
                 reader.onload = function(ev) { callback(ev.target.result); };
                 reader.onerror = function() { callback(null); };
                 reader.readAsDataURL(file);
                 return;
             }
-            if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
-            else { w = Math.round(w * maxDim / h); h = maxDim; }
+            if (w > h) { h = Math.round(h * targetDim / w); w = targetDim; }
+            else { w = Math.round(w * targetDim / h); h = targetDim; }
             const canvas = document.createElement('canvas');
             canvas.width = w; canvas.height = h;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, w, h);
-            callback(canvas.toDataURL('image/jpeg', 0.75));
+            callback(canvas.toDataURL('image/webp', 0.5));
         };
         img.onerror = function() { URL.revokeObjectURL(url); callback(null); };
         img.src = url;
@@ -3199,6 +3218,132 @@
         return arr[Math.floor(Math.random() * arr.length)];
     }
 
+    function drawLoveGraph(canvas, color, time, strength, certainty, distance, resistance, echo) {
+        let ctx = canvas.getContext('2d');
+        let width = canvas.width;
+        let height = canvas.height;
+        
+        ctx.clearRect(0, 0, width, height);
+        
+        let lineWidthMap = { '轻': 2, '中等': 4, '强': 8 };
+        let lineWidth = lineWidthMap[strength] || 4;
+        
+        let alphaMap = { '高': 1, '中等': 0.7, '低': 0.4 };
+        let alpha = alphaMap[certainty] || 0.7;
+        
+        let distanceOffset = { '近': 0, '中': height * 0.15, '远': height * 0.3 };
+        
+        ctx.strokeStyle = color;
+        ctx.globalAlpha = alpha;
+        ctx.lineWidth = lineWidth;
+        
+        let points = [];
+        let segments = 8;
+        
+        for (let i = 0; i <= segments; i++) {
+            let x = (width / segments) * i;
+            let baseY = height / 2;
+            let variance = (height / 3) * (distance === '远' ? 0.6 : distance === '近' ? 1.2 : 1);
+            let y = baseY + (Math.sin(i * Math.random() * 2) * variance) + distanceOffset[distance];
+            points.push({ x, y });
+        }
+        
+        if (time === '现在') {
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.stroke();
+        } else if (time === '将来') {
+            ctx.setLineDash([8, 4]);
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+        } else if (time === '过去') {
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.stroke();
+            
+            ctx.lineWidth = lineWidth * 0.5;
+            ctx.globalAlpha = alpha * 0.5;
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y + 6);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y + 6);
+            }
+            ctx.stroke();
+        } else {
+            let brokenSegments = Math.floor(Math.random() * 3) + 1;
+            let breakIndices = [];
+            while (breakIndices.length < brokenSegments) {
+                let idx = Math.floor(Math.random() * (segments - 1)) + 1;
+                if (!breakIndices.includes(idx)) breakIndices.push(idx);
+            }
+            breakIndices.sort((a, b) => a - b);
+            
+            let startIdx = 0;
+            breakIndices.push(segments);
+            
+            for (let breakIdx of breakIndices) {
+                ctx.beginPath();
+                ctx.moveTo(points[startIdx].x, points[startIdx].y);
+                for (let i = startIdx + 1; i <= breakIdx; i++) {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+                ctx.stroke();
+                startIdx = breakIdx + 1;
+                if (startIdx >= segments) break;
+            }
+        }
+        
+        ctx.globalAlpha = alpha * 0.3;
+        if (echo === '强' || echo === '反复') {
+            let echoCount = echo === '反复' ? 3 : 1;
+            for (let e = 1; e <= echoCount; e++) {
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y + e * 12);
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i].x, points[i].y + e * 12);
+                }
+                ctx.stroke();
+            }
+        } else if (echo === '弱') {
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y + 8);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y + 8);
+            }
+            ctx.stroke();
+        }
+        
+        if (resistance !== '无') {
+            ctx.globalAlpha = alpha;
+            ctx.strokeStyle = '#9ca3af';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 4]);
+            
+            let resistanceCount = resistance === '大' ? 5 : resistance === '中' ? 3 : 2;
+            for (let r = 0; r < resistanceCount; r++) {
+                let x = width * 0.2 + (width * 0.6 * r / (resistanceCount - 1));
+                ctx.beginPath();
+                ctx.moveTo(x, height * 0.2);
+                ctx.lineTo(x, height * 0.8);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+        }
+        
+        ctx.globalAlpha = 1;
+    }
+
     function generateLoveMessage() {
         let subjects = ["等待", "停留中", "推进", "离开", "靠近", "观察", "思考", "行动", "思念", "期盼", "守护", "陪伴"];
         let intensities = ["轻", "中等", "强烈", "微弱", "温柔", "深情"];
@@ -3220,23 +3365,29 @@
         let resistance = getRandomItem(resistances);
         let echo = getRandomItem(echos);
 
-        let msgText = `我在${subject}${intensity}${color}${time}`;
+        let canvas = document.getElementById('loveLinkCanvas');
+        if (canvas) {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            drawLoveGraph(canvas, color, time, strength, certainty, distance, resistance, echo);
+        }
         
-        let metaList = [];
-        metaList.push(`强度:${strength}`);
-        metaList.push(`确定:${certainty}`);
-        metaList.push(`距离:${distance}`);
-        metaList.push(`阻力:${resistance}`);
-        metaList.push(`回声:${echo}`);
-
         let analysis = analyzeMessage(subject, intensity, color, time, strength, certainty, distance, resistance, echo);
 
         let resultDiv = document.getElementById('generatedMessage');
         resultDiv.innerHTML = `
-            <div class="msg-header">生成的信息</div>
-            <div class="msg-body">${msgText}</div>
-            <div class="msg-meta">${metaList.join('　')}</div>
-            <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e8d4f0;">
+            <div class="love-link-params">
+                <div class="love-link-param"><span class="param-label">主体</span><span class="param-value">${subject}</span></div>
+                <div class="love-link-param"><span class="param-label">情感</span><span class="param-value">${intensity}</span></div>
+                <div class="love-link-param"><span class="param-label">颜色</span><span class="param-value" style="color:${color};">●</span></div>
+                <div class="love-link-param"><span class="param-label">时间</span><span class="param-value">${time}</span></div>
+                <div class="love-link-param"><span class="param-label">强度</span><span class="param-value">${strength}</span></div>
+                <div class="love-link-param"><span class="param-label">确定度</span><span class="param-value">${certainty}</span></div>
+                <div class="love-link-param"><span class="param-label">距离</span><span class="param-value">${distance}</span></div>
+                <div class="love-link-param"><span class="param-label">阻力</span><span class="param-value">${resistance}</span></div>
+                <div class="love-link-param"><span class="param-label">回声</span><span class="param-value">${echo}</span></div>
+            </div>
+            <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #e8d4f0;">
                 <div style="font-size:0.75rem;color:#7a4b5c;font-weight:bold;margin-bottom:4px;">💡 解读</div>
                 <div style="font-size:0.8rem;color:#5a4a55;line-height:1.6;">${analysis}</div>
             </div>
