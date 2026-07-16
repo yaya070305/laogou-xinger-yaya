@@ -910,6 +910,39 @@
 
         .ringtone-preview button { background: #c1d9f0; border: none; border-radius: 30px; padding: 4px 10px; font-size: 0.7rem; cursor: pointer; }
 
+        .love-link-card { background: #fdf4ff; padding: 20px; border-radius: 2rem; width: 90%; max-width: 600px; max-height: 85vh; overflow-y: auto; position: relative; }
+        .love-link-close { position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #c0a0a8; }
+        .love-link-close:hover { color: #7a4b5c; }
+        .love-link-header { text-align: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #f0d8e8; }
+        .love-link-header h3 { font-size: 1.4rem; color: #7a4b5c; margin: 0; }
+        .love-link-subtitle { font-size: 0.85rem; color: #b0939f; margin-top: 4px; }
+        .love-link-content { font-size: 0.9rem; }
+        .love-link-section { margin-bottom: 20px; padding: 12px; background: rgba(255,255,255,0.7); border-radius: 1rem; border: 1px solid #f0d8e8; }
+        .love-link-section h4 { font-size: 0.85rem; color: #ad6a7c; margin: 0 0 12px 0; display: flex; align-items: center; gap: 6px; }
+        .legend-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #5a4a55; }
+        .legend-color { width: 24px; height: 24px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); }
+        .line-types { display: flex; flex-wrap: wrap; gap: 12px; }
+        .line-type { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #5a4a55; }
+        .line-sample { width: 40px; height: 3px; background: #7a4b5c; }
+        .line-sample.solid { background: #7a4b5c; }
+        .line-sample.dashed { background: none; border-top: 3px dashed #7a4b5c; }
+        .line-sample.double { background: none; border-top: 2px solid #7a4b5c; border-bottom: 2px solid #7a4b5c; }
+        .line-sample.broken { background: linear-gradient(to right, #7a4b5c 40%, transparent 40%, transparent 50%, #7a4b5c 50%, #7a4b5c 60%, transparent 60%); }
+        .layer-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+        .layer-item { display: flex; justify-content: space-between; font-size: 0.8rem; }
+        .layer-label { color: #7a4b5c; font-weight: 500; }
+        .layer-desc { color: #b0939f; }
+        .generate-btn { background: linear-gradient(135deg, #a855f7, #c084fc); color: white; border: none; padding: 10px 20px; border-radius: 40px; font-size: 0.9rem; cursor: pointer; }
+        .generate-btn:hover { opacity: 0.9; }
+        .generated-message { margin-top: 16px; padding: 12px; background: linear-gradient(135deg, #f0e6ff 0%, #fdf4ff 100%); border-radius: 1rem; border: 1px solid #e8d4f0; display: none; }
+        .generated-message.show { display: block; }
+        .generated-message .msg-header { font-size: 0.85rem; font-weight: bold; color: #7a4b5c; margin-bottom: 8px; }
+        .generated-message .msg-body { font-size: 0.85rem; color: #5a4a55; line-height: 1.8; }
+        .generated-message .msg-meta { font-size: 0.75rem; color: #b0939f; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e8d4f0; }
+        .love-link-footer { text-align: center; margin-top: 16px; padding-top: 12px; border-top: 1px solid #f0d8e8; }
+        .love-link-footer p { font-size: 0.75rem; color: #b0939f; margin: 0; }
+
     </style>
 
 </head>
@@ -1129,6 +1162,8 @@
 
                 <button id="letterHistoryBtn" class="letter-btn" style="background:#f0d8e0;">📖 信匣</button>
 
+                <button id="loveLinkBtn" class="letter-btn" style="background:#e8d4f0;">🔮 爱的链接</button>
+
             </div>
 
         </div>
@@ -1167,6 +1202,9 @@
 
 <!-- 信纸查看弹窗 -->
 <div id="letterViewModal" class="letter-view-modal"><div class="letter-paper"><button class="letter-paper-close" onclick="document.getElementById('letterViewModal').style.display='none'">✕</button><div class="letter-paper-header"><div class="letter-paper-title" id="letterViewTitle"></div></div><div class="letter-paper-body" id="letterViewBody"></div><div class="letter-paper-meta" id="letterViewMeta"></div><div class="letter-paper-nav"><button id="letterViewPrev">◀ 上一封</button><span class="letter-paper-count" id="letterViewCount"></span><button id="letterViewNext">下一封 ▶</button></div></div></div>
+
+<!-- 爱的链接弹窗 -->
+<div id="loveLinkModal" class="letter-modal"><div class="love-link-card"><button class="love-link-close" onclick="document.getElementById('loveLinkModal').style.display='none'">✕</button><div class="love-link-header"><h3>🔮 爱的链接</h3><p class="love-link-subtitle">有限图形通信系统</p></div><div class="love-link-content"><div class="love-link-section"><h4>🎨 图例</h4><div class="legend-grid"><div class="legend-item"><div class="legend-color" style="background:#000;"></div><span>黑色 · 中性 / 陈述</span></div><div class="legend-item"><div class="legend-color" style="background:#3b82f6;"></div><span>蓝色 · 平静 / 观察 / 等待</span></div><div class="legend-item"><div class="legend-color" style="background:#22c55e;"></div><span>绿色 · 接受 / 安全 / 正面</span></div><div class="legend-item"><div class="legend-color" style="background:#eab308;"></div><span>黄色 · 注意 / 好奇 / 思考</span></div><div class="legend-item"><div class="legend-color" style="background:#f97316;"></div><span>橙色 · 想要 / 主动 / 靠近</span></div><div class="legend-item"><div class="legend-color" style="background:#ef4444;"></div><span>红色 · 强烈 / 紧急 / 拒绝</span></div><div class="legend-item"><div class="legend-color" style="background:#a855f7;"></div><span>紫色 · 喜欢 / 亲近 / 特殊情感</span></div><div class="legend-item"><div class="legend-color" style="background:#9ca3af;"></div><span>灰色 · 不确定 / 疲惫 / 模糊</span></div></div></div><div class="love-link-section"><h4>⏱️ 时间 · 线型</h4><div class="line-types"><div class="line-type"><div class="line-sample solid"></div><span>实线 · 现在</span></div><div class="line-type"><div class="line-sample dashed"></div><span>虚线 · 将来 / 打算</span></div><div class="line-type"><div class="line-sample double"></div><span>双线 · 过去 / 已发生</span></div><div class="line-type"><div class="line-sample broken"></div><span>断线 · 未知 / 中断</span></div></div></div><div class="love-link-section"><h4>✨ 附加层</h4><div class="layer-list"><div class="layer-item"><span class="layer-label">粗细</span><span class="layer-desc">强度</span></div><div class="layer-item"><span class="layer-label">远近</span><span class="layer-desc">抵达难度</span></div><div class="layer-item"><span class="layer-label">透明</span><span class="layer-desc">确定度</span></div><div class="layer-item"><span class="layer-label">淡影</span><span class="layer-desc">回声 / 反复</span></div><div class="layer-item"><span class="layer-label">阻隔线</span><span class="layer-desc">阻力</span></div><div class="layer-item"><span class="layer-label">双框</span><span class="layer-desc">空间更稳定</span></div></div></div><div class="love-link-section"><h4>🔮 当前信息</h4><div id="generatedMessage" class="generated-message"></div><button id="generateMsgBtn" class="generate-btn" style="margin-top:12px;width:100%;">🔄 刷新信息</button></div></div><div class="love-link-footer"><p>💝 通过图形传递心意的桥梁</p></div></div></div>
 
 <div id="toast" class="toast"></div>
 
@@ -3155,6 +3193,105 @@
         applyFont(chatFontSize);
     }
 
+    // ==================== 爱的链接 - 生成信息 ====================
+
+    function getRandomItem(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function generateLoveMessage() {
+        let subjects = ["等待", "停留中", "推进", "离开", "靠近", "观察", "思考", "行动", "思念", "期盼", "守护", "陪伴"];
+        let intensities = ["轻", "中等", "强烈", "微弱", "温柔", "深情"];
+        let colors = ["#000000", "#3b82f6", "#22c55e", "#eab308", "#f97316", "#ef4444", "#a855f7", "#9ca3af", "#ec4899", "#8b5cf6"];
+        let times = ["现在", "将来", "过去", "未知"];
+        let strengths = ["轻", "中等", "强"];
+        let certainties = ["高", "中等", "低"];
+        let distances = ["近", "中", "远"];
+        let resistances = ["无", "小", "中", "大"];
+        let echos = ["无", "弱", "强", "反复"];
+
+        let subject = getRandomItem(subjects);
+        let intensity = getRandomItem(intensities);
+        let color = getRandomItem(colors);
+        let time = getRandomItem(times);
+        let strength = getRandomItem(strengths);
+        let certainty = getRandomItem(certainties);
+        let distance = getRandomItem(distances);
+        let resistance = getRandomItem(resistances);
+        let echo = getRandomItem(echos);
+
+        let msgText = `我在${subject}${intensity}${color}${time}`;
+        
+        let metaList = [];
+        metaList.push(`强度:${strength}`);
+        metaList.push(`确定:${certainty}`);
+        metaList.push(`距离:${distance}`);
+        metaList.push(`阻力:${resistance}`);
+        metaList.push(`回声:${echo}`);
+
+        let analysis = analyzeMessage(subject, intensity, color, time, strength, certainty, distance, resistance, echo);
+
+        let resultDiv = document.getElementById('generatedMessage');
+        resultDiv.innerHTML = `
+            <div class="msg-header">生成的信息</div>
+            <div class="msg-body">${msgText}</div>
+            <div class="msg-meta">${metaList.join('　')}</div>
+            <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e8d4f0;">
+                <div style="font-size:0.75rem;color:#7a4b5c;font-weight:bold;margin-bottom:4px;">💡 解读</div>
+                <div style="font-size:0.8rem;color:#5a4a55;line-height:1.6;">${analysis}</div>
+            </div>
+        `;
+        resultDiv.classList.add('show');
+    }
+
+    function analyzeMessage(subject, intensity, color, time, strength, certainty, distance, resistance, echo) {
+        let parts = [];
+        
+        let colorMeaning = {
+            '#000000': '中性或陈述',
+            '#3b82f6': '平静、观察或等待',
+            '#22c55e': '接受、安全或正面',
+            '#eab308': '注意、好奇或思考',
+            '#f97316': '想要、主动或靠近',
+            '#ef4444': '强烈、紧急或拒绝',
+            '#a855f7': '喜欢、亲近或特殊情感',
+            '#9ca3af': '不确定、疲惫或模糊',
+            '#ec4899': '热烈、浪漫或激情',
+            '#8b5cf6': '神秘、梦幻或遐想'
+        };
+        
+        let timeMeaning = {
+            '现在': '正在发生',
+            '将来': '打算或期望',
+            '过去': '已经发生',
+            '未知': '状态不明'
+        };
+
+        parts.push(`主体${subject}，${timeMeaning[time]}。`);
+        parts.push(`颜色决定这是${colorMeaning[color] || '一种特殊的情感表达'}。`);
+        
+        if (strength === '轻') parts.push('这条信息比较轻，像试探或低声表达。');
+        else if (strength === '强') parts.push('这条信息很强势，表达得非常明确。');
+        else parts.push('这条信息强度适中，表达清晰。');
+        
+        if (certainty === '高') parts.push('它的确定度较高，表达比较清楚。');
+        else if (certainty === '低') parts.push('它的确定度较低，可能还在犹豫中。');
+        else parts.push('它的确定度适中，有一定的把握。');
+        
+        if (distance === '近') parts.push('距离很近，容易被接收到。');
+        else if (distance === '远') parts.push('距离较远，需要努力才能传达。');
+        else parts.push('距离适中，需要适当的努力。');
+        
+        if (resistance === '无') parts.push('没有阻力，可以顺利传达。');
+        else if (resistance === '大') parts.push('有较大阻力，需要克服困难。');
+        else parts.push('有一些阻力，需要耐心和坚持。');
+        
+        if (echo === '强' || echo === '反复') parts.push(`这条信息有${echo === '反复' ? '明显的' : '较强的'}回声，像是${echo === '反复' ? '反复强调' : '回响不断'}。`);
+        else if (echo === '弱') parts.push('这条信息有微弱的回声，像是轻声诉说。');
+
+        return parts.join(' ');
+    }
+
     // ==================== 绑定事件 ====================
 
     function bindEvents() {
@@ -3292,6 +3429,17 @@
         });
 
         document.getElementById('forceReplyBtn').onclick = manualForceReply;
+
+        document.getElementById('loveLinkBtn').onclick = () => {
+            document.getElementById('loveLinkModal').style.display = 'flex';
+            generateLoveMessage();
+        };
+
+        document.getElementById('generateMsgBtn').onclick = generateLoveMessage;
+
+        document.getElementById('loveLinkModal').addEventListener('click', function(e) {
+            if (e.target === this) this.style.display = 'none';
+        });
 
         let sidebar = document.getElementById('sidebar'), menuBtn = document.getElementById('menuBtn'), overlay = document.getElementById('menuOverlay');
 
